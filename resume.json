@@ -69,8 +69,8 @@
     },
     {
       "name": "Blackboard AI",
-      "url": "https://blackboard.almanza.cc",
-      "url_label": "blackboard.almanza.cc",
+      "url": "https://blackboard.almanza.cv",
+      "url_label": "blackboard.almanza.cv",
       "highlights": [
         "Experimental tool enabling AI to construct complex visual explanations from simple shapes on a real-time blackboard, featuring voice narration and LaTeX rendering. Using Claude and React."
       ]
