@@ -1,4 +1,4 @@
-# CC - Resume Builder
+# CV - Resume Builder
 
 A template engine that generates HTML and PDF resumes from a single JSON data source.
 
@@ -78,7 +78,7 @@ sudo apt-get install texlive-full
 ## Project Structure
 
 ```
-cc/
+cv/
 ├── resume.json          # Your resume data (edit this)
 ├── .hidden/             # Private data (gitignored)
 │   ├── secret.json      # Sensitive info (phone, etc.)
