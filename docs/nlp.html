@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Temas selectos de NLP · IOAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f6f4ee;        /* fondo papel */
+  --paper2:#fbfaf6;
+  --ink:#1c1a17;          /* texto principal */
+  --soft:#54514b;         /* texto secundario */
+  --faint:#8d897f;        /* terciario */
+  --rule:#d8d3c7;         /* líneas finas */
+  --rule2:#e7e3d8;
+  --accent:#9c2a2a;       /* rojo académico sobrio */
+  --accent2:#1f5673;      /* azul pizarra */
+  --gold:#a9791c;         /* ocre */
+  --green:#3f6f4b;
+  --card:#fffefb;
+  --shadow:0 1px 2px rgba(40,36,28,.06),0 8px 24px rgba(40,36,28,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+/* textura sutil de papel */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.5;
+  background-image:radial-gradient(rgba(0,0,0,.018) 1px,transparent 1px);background-size:3px 3px}
+
+.deck{position:fixed;inset:0;z-index:2}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;
+  padding:72px 92px 84px;opacity:0;transition:opacity .45s ease}
+.slide.active{display:flex;opacity:1}
+
+/* ---------- tipografía ---------- */
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:22px;font-weight:500;
+  display:flex;align-items:center;gap:14px}
+.eyebrow .num{color:var(--faint)}
+.eyebrow::before{content:"";width:30px;height:1px;background:var(--accent);display:inline-block}
+
+h1{font-family:'Newsreader',serif;font-weight:500;font-size:66px;line-height:1.04;letter-spacing:-.01em}
+h2{font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1.08;letter-spacing:-.005em}
+h3{font-family:'Newsreader',serif;font-weight:500;font-size:30px;line-height:1.15}
+.serif{font-family:'Newsreader',serif}
+.it{font-style:italic}
+.em{color:var(--accent)}
+.em2{color:var(--accent2)}
+.emg{color:var(--gold)}
+
+p{font-size:21px;line-height:1.6;color:var(--soft);max-width:30ch}
+.lead{font-size:25px;line-height:1.5;color:var(--ink);max-width:36ch;font-family:'Newsreader',serif}
+p.wide,.wide{max-width:60ch}
+strong{color:var(--ink);font-weight:600}
+.small{font-size:15px;color:var(--faint);line-height:1.5}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+/* ---------- layout ---------- */
+.body{flex:1;display:flex;min-height:0;gap:64px;align-items:flex-start}
+.body.center{align-items:center}
+.col{display:flex;flex-direction:column;min-width:0}
+.spacer{flex:1}
+.titleslide{justify-content:center}
+
+/* ---------- fragmentos (revelado por clics) ---------- */
+.frag{opacity:0;transform:translateY(8px);transition:opacity .5s ease,transform .5s ease}
+.frag.in{opacity:1;transform:none}
+.frag.dim{opacity:.32}
+
+/* ---------- listas académicas ---------- */
+.points{display:flex;flex-direction:column;gap:22px;margin-top:8px}
+.pt{display:flex;gap:18px;align-items:baseline;max-width:54ch}
+.pt .mk{font-family:'Newsreader',serif;font-style:italic;font-size:22px;color:var(--accent);
+  flex:none;width:30px;line-height:1.3}
+.pt .tx{font-size:20px;line-height:1.5;color:var(--soft)}
+.pt .tx b{color:var(--ink);font-weight:600}
+
+.note{border-left:2px solid var(--accent);padding:4px 0 4px 22px;margin-top:4px;max-width:52ch}
+.note p{font-family:'Newsreader',serif;font-style:italic;font-size:21px;color:var(--ink);max-width:none}
+
+.kept{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--faint);
+  letter-spacing:.04em}
+
+.byline{margin-top:30px;padding-top:16px;border-top:1px solid var(--rule);
+  font-family:'Newsreader',serif;font-size:21px;color:var(--ink);letter-spacing:.01em;
+  max-width:14ch}
+
+/* ---------- figura / lienzo ---------- */
+.figure{background:var(--card);border:1px solid var(--rule);border-radius:6px;
+  box-shadow:var(--shadow);overflow:hidden;position:relative}
+.figure canvas{display:block;width:100%;height:100%}
+.figcap{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--faint);
+  margin-top:12px;letter-spacing:.03em}
+.figcap b{color:var(--soft);font-weight:500}
+
+/* ---------- tarjetas sobrias ---------- */
+.card{background:var(--card);border:1px solid var(--rule);border-radius:6px;
+  padding:24px 26px;box-shadow:var(--shadow)}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--faint)}
+
+/* fórmula HTML */
+.math{font-family:'IBM Plex Mono',monospace;font-size:19px;color:var(--ink);
+  display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap}
+.math .frac{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;margin:0 5px}
+.math .frac .num{border-bottom:1.5px solid var(--soft);padding:0 7px 3px}
+.math .frac .den{padding:4px 7px 0}
+.math .big{font-size:1.5em;color:var(--accent);margin:0 5px}
+.math .sub{font-size:.66em;vertical-align:sub}
+.math .op{color:var(--faint)}
+.mathwrap{background:var(--paper2);border:1px solid var(--rule2);border-radius:6px;
+  padding:18px 22px;display:inline-flex;flex-direction:column;align-items:center;gap:8px}
+.mathwrap .cap{font-family:'IBM Plex Mono';font-size:12px;color:var(--faint)}
+
+/* code */
+.code{font-family:'IBM Plex Mono',monospace;font-size:14px;line-height:1.7;
+  background:#272622;color:#e8e4d8;border-radius:6px;padding:22px 24px;white-space:pre;
+  box-shadow:var(--shadow);overflow:auto}
+.code .c{color:#8f897a;font-style:italic}.code .k{color:#c98a9b}.code .s{color:#a3b67f}
+.code .f{color:#7fa9c4}.code .n{color:#d6a85f}
+
+/* sección divisoria (bloques de la sesión) */
+.divider{justify-content:center}
+.divider .biglabel{font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:24px}
+.divider h2{font-size:62px;max-width:20ch}
+.divider .sub{font-family:'Newsreader',serif;font-style:italic;font-size:26px;color:var(--soft);
+  margin-top:20px;max-width:40ch}
+.roadmap{display:flex;gap:0;margin-top:48px;border-top:1px solid var(--rule)}
+.roadmap .step{flex:1;padding:18px 20px 0;border-right:1px solid var(--rule)}
+.roadmap .step:last-child{border-right:none}
+.roadmap .step .n{font-family:'IBM Plex Mono';font-size:12px;color:var(--faint)}
+.roadmap .step .t{font-family:'Newsreader',serif;font-size:19px;margin-top:6px;color:var(--soft)}
+.roadmap .step.on .t{color:var(--accent)}
+.roadmap .step.on{border-top:2px solid var(--accent);margin-top:-1px}
+
+/* pills */
+.pills{display:flex;gap:10px;flex-wrap:wrap}
+.pill{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.04em;
+  padding:7px 14px;border:1px solid var(--rule);border-radius:999px;color:var(--soft);background:var(--card)}
+
+/* legend */
+.legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:14px}
+.legend .i{display:flex;gap:9px;align-items:center;font-size:14px;color:var(--soft)}
+.legend .d{width:11px;height:11px;border-radius:50%}
+
+/* controles interactivos */
+.controls{display:flex;gap:16px;align-items:center;margin-top:18px;flex-wrap:wrap}
+.controls .lab{font-family:'IBM Plex Mono';font-size:13px;color:var(--faint)}
+input[type=range]{accent-color:var(--accent);width:200px}
+.btn{font-family:'IBM Plex Mono';font-size:12px;letter-spacing:.04em;padding:9px 16px;
+  border:1px solid var(--rule);border-radius:5px;background:var(--card);color:var(--soft);
+  cursor:pointer;transition:.2s}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.readout{font-family:'IBM Plex Mono';font-size:14px;color:var(--soft)}
+.readout b{color:var(--accent)}
+
+/* ---------- chrome ---------- */
+.bar{position:fixed;left:0;bottom:0;height:2px;background:var(--accent);z-index:60;transition:width .4s}
+.foot{position:fixed;right:30px;bottom:18px;font-family:'IBM Plex Mono';font-size:12px;
+  color:var(--faint);z-index:60;letter-spacing:.05em}
+.brand{position:fixed;left:30px;bottom:16px;font-family:'IBM Plex Mono';font-size:11px;
+  color:var(--faint);z-index:60;letter-spacing:.16em;text-transform:uppercase}
+.nav{position:fixed;right:26px;top:24px;display:flex;gap:8px;z-index:60}
+.nav button{width:36px;height:36px;border-radius:6px;border:1px solid var(--rule);
+  background:var(--card);color:var(--soft);font-size:16px;cursor:pointer;transition:.2s}
+.nav button:hover{border-color:var(--accent);color:var(--accent)}
+.fdots{position:fixed;left:30px;top:28px;display:flex;gap:6px;z-index:60}
+.fdots .fd{width:6px;height:6px;border-radius:50%;background:var(--rule)}
+.fdots .fd.on{background:var(--accent)}
+.kbd{font-family:'IBM Plex Mono';font-size:11px;background:var(--paper2);border:1px solid var(--rule);
+  border-radius:4px;padding:1px 6px;color:var(--soft)}
+
+/* ---------- escena a pantalla completa (sin caja) ---------- */
+.slide.stage{padding:0}
+.slide.stage .stagehead{position:absolute;top:34px;left:56px;right:56px;z-index:3;
+  display:flex;align-items:baseline;justify-content:space-between;gap:24px;margin:0;pointer-events:none}
+.stagehead .ttl{font-family:'Newsreader',serif;font-weight:500;font-size:34px;line-height:1.05;
+  letter-spacing:-.005em;color:var(--ink);max-width:30ch}
+.stagehead .ttl .em{color:var(--accent)}
+.stagehead .ttl .it{font-style:italic}
+.stagehead .kx{font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--accent);white-space:nowrap;flex:none;padding-top:8px}
+.stagefig{position:absolute;inset:0;border:none;border-radius:0;background:transparent;
+  box-shadow:none;overflow:hidden;z-index:1}
+.stagefig canvas{display:block;width:100%;height:100%}
+.slide.stage .stagesub{position:absolute;left:56px;right:56px;bottom:54px;z-index:3;margin:0;
+  font-family:'Newsreader',serif;font-size:21px;line-height:1.4;color:var(--soft);max-width:none;
+  pointer-events:none}
+.slide.stage .stagehead .ttl{background:linear-gradient(180deg,rgba(246,244,238,.92),rgba(246,244,238,.0));
+  padding:2px 0 18px}
+.slide.stage .stagesub{background:linear-gradient(0deg,rgba(246,244,238,.95),rgba(246,244,238,.0));
+  padding:18px 0 4px}
+.stagesub b{color:var(--ink);font-weight:600}
+.stagesub .em{color:var(--accent);font-style:italic}
+.slide.stage .stagebar{position:absolute;left:56px;right:56px;bottom:48px;z-index:3;margin:0;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.stagebar .lab{font-family:'IBM Plex Mono';font-size:13px;color:var(--faint)}
+.stagebar .readout{font-family:'IBM Plex Mono';font-size:14px;color:var(--soft)}
+.stagebar .readout b{color:var(--accent)}
+/* anotaciones flotantes sobre la figura */
+.fignote{position:absolute;font-family:'IBM Plex Mono';font-size:12px;color:var(--faint);
+  letter-spacing:.03em;background:rgba(246,244,238,.7);padding:5px 10px;border-radius:6px;z-index:2}
+.figlegend{position:absolute;left:56px;bottom:96px;display:flex;gap:18px;z-index:2;
+  font-family:'IBM Plex Mono';font-size:12px;color:var(--soft);
+  background:rgba(246,244,238,.7);padding:7px 12px;border-radius:7px}
+.figlegend .i{display:flex;gap:8px;align-items:center}
+.figlegend .d{width:10px;height:10px;border-radius:50%}
+</style>
+</head>
+<body>
+<div class="deck" id="deck"></div>
+<div class="bar" id="bar"></div>
+<div class="fdots" id="fdots"></div>
+<div class="brand">IOAI · Sesión de NLP</div>
+<div class="foot"><b id="cur">1</b> / <span id="tot">1</span></div>
+<div class="nav"><button onclick="prev()">‹</button><button onclick="next()">›</button></div>
+<script>
+const SLIDES=[];
+function slide(html,opts={}){SLIDES.push({html,...opts});}
+let idx=0, stepMax=0;
+const ANIM={raf:null,t0:0,step:0,stepT:0};
+
+/* ---------- helpers de dibujo (tema claro) ---------- */
+const C={ink:'#1c1a17',soft:'#54514b',faint:'#8d897f',rule:'#d8d3c7',
+  accent:'#9c2a2a',accent2:'#1f5673',gold:'#a9791c',green:'#3f6f4b',violet:'#6a4c93'};
+function cx(id){const c=document.getElementById(id);if(!c)return null;
+  const r=c.getBoundingClientRect();const dpr=window.devicePixelRatio||1;
+  c.width=r.width*dpr;c.height=r.height*dpr;const x=c.getContext('2d');
+  x.setTransform(dpr,0,0,dpr,0,0);x._w=r.width;x._h=r.height;return x;}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function lerp(a,b,t){return a+(b-a)*t}
+function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+function D(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function grid(x,gap=40){const w=x._w,h=x._h;x.save();x.strokeStyle='rgba(28,26,23,.05)';x.lineWidth=1;
+  const x0=SAFE.left,y0=SAFE.top,x1=w-SAFE.right,y1=h-SAFE.bottom;
+  for(let gx=x0;gx<=x1;gx+=gap){x.beginPath();x.moveTo(gx,y0);x.lineTo(gx,y1);x.stroke();}
+  for(let gy=y0;gy<=y1;gy+=gap){x.beginPath();x.moveTo(x0,gy);x.lineTo(x1,gy);x.stroke();}x.restore();}
+function dot(x,p,r,c,a=1){x.save();x.globalAlpha=a;x.fillStyle=c;x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();
+  x.restore();}
+function ring(x,p,r,c,lw=1.5,a=1){x.save();x.globalAlpha=a;x.strokeStyle=c;x.lineWidth=lw;
+  x.beginPath();x.arc(p.x,p.y,r,0,7);x.stroke();x.restore();}
+function ln(x,a,b,c,lw=1.5,dash=null,al=1){x.save();x.globalAlpha=al;x.strokeStyle=c;x.lineWidth=lw;
+  if(dash)x.setLineDash(dash);x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke();x.restore();}
+function txt(x,p,t,c,s=13,dx=0,dy=0,al='left',st='normal'){x.save();x.fillStyle=c;
+  x.font=`${st==='it'?'italic ':''}${s}px ${st==='serif'?"'Newsreader',serif":"'IBM Plex Mono',monospace"}`;
+  x.textAlign=al;x.fillText(t,p.x+dx,p.y+dy);x.restore();}
+function cross(x,p,r,c,lw=2){x.save();x.strokeStyle=c;x.lineWidth=lw;x.lineCap='round';
+  x.beginPath();x.moveTo(p.x-r,p.y);x.lineTo(p.x+r,p.y);x.moveTo(p.x,p.y-r);x.lineTo(p.x,p.y+r);x.stroke();x.restore();}
+function loop(slideIndex,fn){ANIM.t0=performance.now();
+  function tick(now){if(idx!==slideIndex)return;fn((now-ANIM.t0)/1000);ANIM.raf=requestAnimationFrame(tick);}
+  ANIM.raf=requestAnimationFrame(tick);}
+
+/* ---------- utilidades de animación enriquecidas ---------- */
+/* zona segura: deja libres las franjas de título (arriba) y subtítulo/footer (abajo) */
+const SAFE={top:104,bottom:118,left:64,right:64};
+/* mapea coordenadas relativas (0..1) al área segura del canvas */
+function SX(x,rel){return SAFE.left+rel*(x._w-SAFE.left-SAFE.right);}
+function SY(x,rel){return SAFE.top+rel*(x._h-SAFE.top-SAFE.bottom);}
+/* punto relativo -> absoluto dentro de la zona segura */
+function SP(x,p){return {x:SX(x,p.x),y:SY(x,p.y)};}
+function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+function easeOutBack(t){const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);}
+function easeOutElastic(t){const c4=(2*Math.PI)/3;return t<=0?0:t>=1?1:Math.pow(2,-10*t)*Math.sin((t*10-0.75)*c4)+1;}
+function easeInOutCubic(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+/* tiempo desde que arrancó el paso de animación actual, en segundos */
+function stepElapsed(){return ANIM.step>=1?(performance.now()-ANIM.stepT)/1000:0;}
+/* aparición escalonada: devuelve 0..1 para el elemento i */
+function stagger(t,i,each=0.06,dur=0.5){return clamp((t-i*each)/dur,0,1);}
+/* punto que viaja de a->b con easing y un arco opcional */
+function travel(a,b,p,arc=0){const e=p,x=lerp(a.x,b.x,e),y=lerp(a.y,b.y,e);
+  const lift=Math.sin(e*Math.PI)*arc;return {x,y:y-lift};}
+/* dibuja una línea "trazándose" de a a b según prog 0..1 */
+function trace(x,a,b,prog,c,lw=1.5,dash=null,al=1){const e=clamp(prog,0,1);
+  ln(x,a,{x:lerp(a.x,b.x,e),y:lerp(a.y,b.y,e)},c,lw,dash,al);}
+/* halo suave pulsante */
+function halo(x,p,r,c,a=0.18){x.save();x.globalAlpha=a;const g=x.createRadialGradient(p.x,p.y,0,p.x,p.y,r);
+  g.addColorStop(0,c);g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();x.restore();}
+/* partícula que se desvanece */
+function spark(x,p,r,c,a){x.save();x.globalAlpha=a;x.fillStyle=c;x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();x.restore();}
+/* hex a rgba */
+function rgba(hex,a){const h=hex.replace('#','');const n=parseInt(h,16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
+/* dibuja flecha con cabeza, trazándose según prog */
+function arrowTrace(x,a,b,prog,c,lw=3){const e=clamp(prog,0,1);
+  const tip={x:lerp(a.x,b.x,e),y:lerp(a.y,b.y,e)};ln(x,a,tip,c,lw);
+  if(e>0.6){const ang=Math.atan2(b.y-a.y,b.x-a.x),s=10*clamp((e-0.6)/0.4,0,1);
+    x.save();x.fillStyle=c;x.beginPath();x.moveTo(tip.x,tip.y);
+    x.lineTo(tip.x-Math.cos(ang-.4)*s,tip.y-Math.sin(ang-.4)*s);
+    x.lineTo(tip.x-Math.cos(ang+.4)*s,tip.y-Math.sin(ang+.4)*s);x.closePath();x.fill();x.restore();}}
+/* easing para escala de aparición con rebote suave */
+function pop(t){return t<=0?0:t>=1?1:easeOutBack(t);}
+
+
+/* ============================================================
+   1 · PORTADA
+   ============================================================ */
+slide(`
+  <div class="titleslide" style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div class="eyebrow">Sesión de NLP · IOAI</div>
+    <h1 style="max-width:20ch;font-size:58px">Temas selectos de<br><span class="it">Procesamiento de Lenguaje Natural (NLP)</span></h1>
+    <div class="byline">Juan Almanza</div>
+  </div>
+`);
+
+/* ============================================================
+   2 · MAPA DE LA SESIÓN
+   ============================================================ */
+slide(`
+  <div class="eyebrow"><span>Contenidos</span></div>
+  <h2 class="frag" data-frag="0" style="opacity:1;transform:none">Estructura de la sesión</h2>
+  <div class="points" style="margin-top:38px">
+    <div class="pt frag" data-frag="1"><span class="mk">I</span><span class="tx"><b>Representaciones.</b> Tokenización, embeddings y el rol del encoder preentrenado.</span></div>
+    <div class="pt frag" data-frag="2"><span class="mk">II</span><span class="tx"><b>Encoders · BERT.</b> Familias de arquitectura, clasificación de texto y ajuste fino eficiente.</span></div>
+    <div class="pt frag" data-frag="3"><span class="mk">III</span><span class="tx"><b>Modelos de lenguaje · LLMs.</b> Generación autoregresiva, prompting y decodificación guiada.</span></div>
+    <div class="pt frag" data-frag="4"><span class="mk">IV</span><span class="tx"><b>Encoder–decoder y cross-modal.</b> Traducción automática, visión-lenguaje y CLIP.</span></div>
+    <div class="pt frag" data-frag="5"><span class="mk">V</span><span class="tx"><b>Caso de estudio.</b> Clasificación con prototipos sobre embeddings (IOAI 2024).</span></div>
+  </div>
+`);
+
+/* ============================================================
+   3 · DIVISOR — BLOQUE I
+   ============================================================ */
+slide(`
+  <div class="divider" style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div class="biglabel">Bloque I</div>
+    <h2>Representaciones</h2>
+    <div class="sub frag" data-frag="1">La conversión de texto en vectores sustenta todo lo demás.</div>
+  </div>
+  <div class="roadmap frag" data-frag="2" style="flex:none">
+    <div class="step on"><div class="n">I</div><div class="t">Representaciones</div></div>
+    <div class="step"><div class="n">II</div><div class="t">Encoders · BERT</div></div>
+    <div class="step"><div class="n">III</div><div class="t">LLMs</div></div>
+    <div class="step"><div class="n">IV</div><div class="t">Encoder–decoder</div></div>
+  </div>
+`);
+
+/* ============================================================
+   4 · TOKENIZACIÓN (idea simple, una sola)
+   ============================================================ */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">Segmentación en <span class="em">tokens</span></div>
+    <div class="kx">I · Representaciones</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-tok"></canvas></div>
+  <div class="stagesub">El texto se divide en <b>sub-palabras</b>, cada una con un identificador del vocabulario.</div>
+`,{init:'tokInit',stage:true,steps:1});
+
+/* ============================================================
+   5 · DE TOKENS A VECTORES (embeddings)
+   ============================================================ */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">El significado se vuelve <span class="em">geometría</span></div>
+    <div class="kx">I · Representaciones</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-emb"></canvas>
+    <div class="figlegend"><span class="i"><span class="d" style="background:#1f5673"></span>cosas parecidas, cerca</span></div>
+  </div>
+  <div class="stagesub">Cada token es un punto en un espacio de cientos de dimensiones; aquí, proyectado a 2-D.</div>
+`,{init:'embInit',stage:true,steps:1});
+
+/* ============================================================
+   6 · EL ENCODER PREENTRENADO YA HIZO EL TRABAJO
+   ============================================================ */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">El encoder convierte texto en <span class="em">vectores que ya separan</span></div>
+    <div class="kx">I · Representaciones</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-frozen"></canvas></div>
+  <div class="stagesub">Frases distintas <b>entran como texto</b> y <b>salen como puntos agrupados</b> por significado, sin entrenar nada.</div>
+`,{init:'frozenInit',stage:true,steps:1});
+
+/* ============================================================
+   7 · DEMO INTERACTIVA #1 — separabilidad
+   ============================================================ */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">Si llegan separados, una <span class="em">recta basta</span></div>
+    <div class="kx">I · Demostración</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-sep"></canvas></div>
+  <div class="stagebar">
+    <span class="lab">Arrastra para mezclar los grupos →</span>
+    <input id="sep-s" type="range" min="2" max="60" value="14" oninput="ANIM.sepSpread=+this.value">
+    <span class="readout" id="sep-read" style="margin-left:auto">la recta separa <b>todo bien</b></span>
+  </div>
+`,{init:'sepInit',stage:true,steps:0});
+
+/* ============================================================
+   8 · DIVISOR — BLOQUE II
+   ============================================================ */
+slide(`
+  <div class="divider" style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div class="biglabel">Bloque II</div>
+    <h2>Encoders · BERT</h2>
+    <div class="sub frag" data-frag="1">Modelos que codifican texto en representaciones útiles.</div>
+  </div>
+  <div class="roadmap frag" data-frag="2" style="flex:none">
+    <div class="step"><div class="n">I</div><div class="t">Representaciones</div></div>
+    <div class="step on"><div class="n">II</div><div class="t">Encoders · BERT</div></div>
+    <div class="step"><div class="n">III</div><div class="t">LLMs</div></div>
+    <div class="step"><div class="n">IV</div><div class="t">Encoder–decoder</div></div>
+  </div>
+`);
+
+/* ============================================================
+   9 · TRES FAMILIAS (mapa mental)
+   ============================================================ */
+slide(`
+  <div class="eyebrow"><span>II · Encoders</span><span class="num">9</span></div>
+  <h2 style="max-width:24ch">Tres <span class="em">familias</span> de arquitectura</h2>
+  <div class="body center" style="margin-top:30px;gap:30px">
+    <div class="card frag" data-frag="1" style="flex:1">
+      <div class="tag" style="color:var(--accent2)">Encoder-only</div>
+      <h3 style="margin-top:12px">BERT</h3>
+      <p style="font-size:17px;margin-top:10px">Lee todo el texto a la vez. Bueno para <b>clasificar</b> y <b>representar</b>.</p>
+    </div>
+    <div class="card frag" data-frag="2" style="flex:1">
+      <div class="tag" style="color:var(--accent)">Decoder-only</div>
+      <h3 style="margin-top:12px">GPT, Llama</h3>
+      <p style="font-size:17px;margin-top:10px">Predice el siguiente token. Bueno para <b>generar</b>.</p>
+    </div>
+    <div class="card frag" data-frag="3" style="flex:1">
+      <div class="tag" style="color:var(--gold)">Encoder–decoder</div>
+      <h3 style="margin-top:12px">T5, mBART</h3>
+      <p style="font-size:17px;margin-top:10px">Lee y luego escribe. Bueno para <b>traducir</b> y transformar.</p>
+    </div>
+  </div>
+  <div class="note frag" data-frag="4" style="margin-top:36px"><p>La elección de la familia adecuada condiciona buena parte de la solución.</p></div>
+`);
+
+/* ============================================================
+   10 · CLASIFICACIÓN CON BERT (cabeza sobre encoder)
+   ============================================================ */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">Clasificación: encoder <span class="em">+</span> capa de salida</div>
+    <div class="kx">II · Encoders</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-head"></canvas></div>
+  <div class="stagesub">El encoder hace el trabajo pesado; basta con <b>entrenar la cabeza</b> y congelar el resto.</div>
+`,{init:'headInit',stage:true});
+
+/* ============================================================
+   11 · FINE-TUNING EFICIENTE (idea, no detalle)
+   ============================================================ */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">Adaptar un modelo gigante <span class="em">sin re-entrenarlo</span></div>
+    <div class="kx">II · Encoders</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-lora"></canvas></div>
+  <div class="stagesub" id="lora-sub">Un modelo ya sabe leer. Para una tarea nueva, no lo reescribes entero: le añades una nota al margen.</div>
+`,{init:'loraInit',stage:true,steps:3});
+
+/* ============================================================
+   12 · DIVISOR — BLOQUE III
+   ============================================================ */
+slide(`
+  <div class="divider" style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div class="biglabel">Bloque III</div>
+    <h2>Modelos de lenguaje · LLMs</h2>
+    <div class="sub frag" data-frag="1">El bloque del problema de mayor dificultad en IOAI 2025.</div>
+  </div>
+  <div class="roadmap frag" data-frag="2" style="flex:none">
+    <div class="step"><div class="n">I</div><div class="t">Representaciones</div></div>
+    <div class="step"><div class="n">II</div><div class="t">Encoders · BERT</div></div>
+    <div class="step on"><div class="n">III</div><div class="t">LLMs</div></div>
+    <div class="step"><div class="n">IV</div><div class="t">Encoder–decoder</div></div>
+  </div>
+`);
+
+/* ============================================================
+   13 · GENERACIÓN AUTOREGRESIVA
+   ============================================================ */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">El objetivo <span class="em">único</span> de un LLM</div>
+    <div class="kx">III · LLMs</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-ar"></canvas></div>
+  <div class="stagesub">Predecir el siguiente token. Responder, traducir y razonar <b>emergen</b> de hacerlo bien.</div>
+`,{init:'arInit',stage:true,steps:5});
+
+/* ============================================================
+   14 · PROMPTING (breve)
+   ============================================================ */
+slide(`
+  <div class="eyebrow"><span>III · LLMs</span><span class="num">14</span></div>
+  <h2 style="max-width:24ch">Prompting: <span class="em">especificación en lenguaje natural</span></h2>
+  <div class="points" style="margin-top:42px">
+    <div class="pt frag" data-frag="1"><span class="mk">·</span><span class="tx">Especificar con precisión la tarea, el formato y, de ser posible, un ejemplo.</span></div>
+    <div class="pt frag" data-frag="2"><span class="mk">·</span><span class="tx">Solicitar <b>razonamiento por pasos</b> cuando el problema lo requiere.</span></div>
+    <div class="pt frag" data-frag="3"><span class="mk">·</span><span class="tx">Con tiempo limitado, un prompt bien diseñado suele rendir más que reentrenar.</span></div>
+  </div>
+  <div class="note frag" data-frag="4" style="margin-top:40px"><p>No obstante, una salida no estructurada es difícil de evaluar de forma automática.</p></div>
+`);
+
+/* ============================================================
+   15 · GUIDED DECODING (la técnica diferenciadora)
+   ============================================================ */
+slide(`
+  <div class="eyebrow"><span>III · LLMs · técnica clave</span><span class="num">15</span></div>
+  <h2 style="max-width:26ch">Decodificación guiada: <span class="em">salida estructurada</span></h2>
+  <div class="body"  style="margin-top:30px">
+    <div class="col" style="flex:1;justify-content:center;gap:26px">
+      <p class="lead frag" data-frag="1">Si lo que sale debe ser parseable, <span class="em">obliga</span> al modelo a un esquema.</p>
+      <div class="points">
+        <div class="pt frag" data-frag="2"><span class="mk">·</span><span class="tx">Restringe la salida a JSON / un tipo (p. ej. <span class="mono">Pydantic</span>).</span></div>
+        <div class="pt frag" data-frag="3"><span class="mk">·</span><span class="tx">Convierte una salida arbitraria en una <b>evaluable</b>.</span></div>
+        <div class="pt frag" data-frag="4"><span class="mk">·</span><span class="tx">Fue determinante en la tarea <span class="mono">Concepts</span> de IOAI 2025.</span></div>
+      </div>
+    </div>
+    <div class="col" style="flex:1;justify-content:center">
+      <div class="code frag" data-frag="2"><span class="c"># salida libre vs. salida con esquema</span>
+<span class="k">class</span> <span class="f">Pista</span>(BaseModel):
+    iconos: <span class="f">list</span>[<span class="f">str</span>]
+    confianza: <span class="f">float</span>
+
+out = llm(prompt,
+          schema=<span class="f">Pista</span>)   <span class="c"># ← forzado</span>
+out.iconos     <span class="c"># siempre parseable</span></div>
+      <div class="figcap frag" data-frag="2">De todas las técnicas de la sesión, esta es la más relevante de retener.</div>
+    </div>
+  </div>
+`);
+
+/* 16 · DIVISOR — BLOQUE IV */
+slide(`
+  <div class="divider" style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div class="biglabel">Bloque IV</div>
+    <h2>Encoder–decoder y cross-modal</h2>
+    <div class="sub frag" data-frag="1">Correspondencias entre texto y texto, y entre texto e imagen.</div>
+  </div>
+  <div class="roadmap frag" data-frag="2" style="flex:none">
+    <div class="step"><div class="n">I</div><div class="t">Representaciones</div></div>
+    <div class="step"><div class="n">II</div><div class="t">Encoders · BERT</div></div>
+    <div class="step"><div class="n">III</div><div class="t">LLMs</div></div>
+    <div class="step on"><div class="n">IV</div><div class="t">Encoder–decoder</div></div>
+  </div>
+`);
+
+/* 17 · TRADUCCIÓN */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">Comprensión y <span class="em">generación</span> entre idiomas</div>
+    <div class="kx">IV · Encoder–decoder</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-trans"></canvas></div>
+  <div class="stagesub">El <b>encoder</b> comprime el significado; el <b>decoder</b> lo despliega como texto nuevo.</div>
+`,{init:'transInit',stage:true});
+
+/* 18 · CLIP */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">CLIP: ¿qué <span class="em">frase</span> describe esta <span class="em">foto</span>?</div>
+    <div class="kx">IV · Cross-modal</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-clip"></canvas></div>
+  <div class="stagesub" id="clip-sub">Foto y frases viven en el mismo espacio: la respuesta es la que cae <b>más cerca</b>.</div>
+`,{init:'clipInit',stage:true,steps:2});
+
+/* 19 · DIVISOR — CASO DE ESTUDIO */
+slide(`
+  <div class="divider" style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div class="biglabel">Caso de estudio · IOAI 2024</div>
+    <h2 style="max-width:18ch">Centroides + KNN<br>sobre embeddings</h2>
+    <div class="sub frag" data-frag="1">Aplicación de los conceptos anteriores a un problema con restricciones.</div>
+  </div>
+`);
+
+/* 20 · EL ENUNCIADO */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">Ampliación de <span class="em">5</span> a <span class="em">7</span> clases</div>
+    <div class="kx">Caso · enunciado</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-state2"></canvas>
+    <div class="figlegend">
+      <span class="i"><span class="d" style="background:#1f5673"></span>5 clases base</span>
+      <span class="i"><span class="d" style="background:#a9791c"></span>clase 5</span>
+      <span class="i"><span class="d" style="background:#9c2a2a"></span>clase 6</span>
+    </div>
+  </div>
+  <div class="stagesub">Llegan 2 clases nuevas, pero <b>no se puede reentrenar</b>: solo se dan los encodings de mBERT.</div>
+`,{init:'state2Init',stage:true});
+
+/* 21 · RESTRICCIONES */
+slide(`
+  <div class="eyebrow"><span>Caso · leer las reglas</span><span class="num">21</span></div>
+  <h2 style="max-width:22ch">Las restricciones <span class="em">son</span> la pista</h2>
+  <div class="points" style="margin-top:40px">
+    <div class="pt frag" data-frag="1"><span class="mk">✕</span><span class="tx">No cambiar el clasificador. No añadir parámetros aprendidos. No reentrenar.</span></div>
+    <div class="pt frag" data-frag="2"><span class="mk">✓</span><span class="tx">Sí puedes calcular <b>promedios</b>.</span></div>
+    <div class="pt frag" data-frag="3"><span class="mk">✓</span><span class="tx">Sí puedes calcular <b>distancias</b>.</span></div>
+  </div>
+  <div class="note frag" data-frag="4" style="margin-top:42px"><p>“Promedios + distancias, sin pesos nuevos” <span class="em">es</span> la definición de un clasificador por prototipos.</p></div>
+`);
+
+/* 22 · EL CENTROIDE */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">El centroide como <span class="em">prototipo</span> de clase</div>
+    <div class="kx">Caso · construcción</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-cent"></canvas>
+    <div class="fignote" style="right:56px;top:92px">μ = promedio de los vectores de la clase</div>
+  </div>
+  <div class="stagesub">El centroide no es un dato real: <b>resume dónde vive</b> la clase en el espacio.</div>
+`,{init:'centInit',stage:true,steps:1});
+
+/* 23 · DEMO #2 — vecino más cercano */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">Clasificación por <span class="em">centroide más cercano</span></div>
+    <div class="kx">Caso · demostración</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-nc"></canvas>
+    <div class="fignote" style="right:56px;top:92px">ŷ(x) = argmin&#8341; d(x, μ&#8342;)</div>
+  </div>
+  <div class="stagebar">
+    <span class="lab"><b>Arrastra el punto</b> · las regiones son las fronteras de Voronoi</span>
+    <span class="readout" id="nc-read" style="margin-left:auto">más cercano → <b>arrastra para ver</b></span>
+  </div>
+`,{init:'ncInit',stage:true});
+
+/* 24 · COSENO vs EUCLÍDEA */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">Dos textos con el <span class="em">mismo sentido</span>, ¿están cerca?</div>
+    <div class="kx">Caso · detalle técnico</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-cos"></canvas></div>
+  <div class="stagesub" id="cos-sub">La distancia recta los ve lejos; el ángulo los ve iguales. En texto, importa el ángulo.</div>
+`,{init:'cosInit',stage:true,steps:2});
+
+/* 25 · EL ENRUTADOR */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">Sin tocar el modelo viejo, le pones un <span class="em">portero</span></div>
+    <div class="kx">Caso · arquitectura</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-route"></canvas></div>
+  <div class="stagesub" id="route-sub">El clasificador de 5 clases sigue intacto. Una capa por fuera decide si la entrada es de una clase nueva.</div>
+`,{init:'routeInit',stage:true,steps:3});
+
+/* 26 · EL UMBRAL */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">El umbral: <span class="em">calibración</span>, no entrenamiento</div>
+    <div class="kx">Caso · calibración</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-thr"></canvas></div>
+  <div class="stagebar">
+    <span class="lab">umbral τ</span>
+    <input id="thr-s" type="range" min="0" max="100" value="55" oninput="ANIM.thr=+this.value/100">
+    <span class="readout" style="margin-left:auto">F1 macro (dev) → <b id="thr-f1">—</b></span>
+  </div>
+`,{init:'thrInit',stage:true});
+
+/* 27 · POR QUÉ F1 MACRO */
+slide(`
+  <div class="stagehead">
+    <div class="ttl">Por qué evalúan con <span class="em">F1 macro</span></div>
+    <div class="kx">Caso · la métrica</div>
+  </div>
+  <div class="stagefig"><canvas id="cv-f1"></canvas></div>
+  <div class="stagesub">Como las clases nuevas son minoría, el <b>F1 macro</b> penaliza abandonarlas; la exactitud no.</div>
+`,{init:'f1Init',stage:true});
+
+/* 28 · EL CÓDIGO */
+slide(`
+  <div class="eyebrow"><span>Caso · de la idea al código</span><span class="num">28</span></div>
+  <h2 style="max-width:24ch">La solución, en <span class="em">esencia</span></h2>
+  <div class="body" style="margin-top:26px">
+    <div class="col" style="flex:1.2;justify-content:center">
+      <div class="code frag" data-frag="1"><span class="c"># centroides de las clases nuevas — solo PROMEDIOS</span>
+mu5 = X[y==<span class="n">5</span>].mean(<span class="n">0</span>)
+mu6 = X[y==<span class="n">6</span>].mean(<span class="n">0</span>)
+mus = F.normalize(torch.stack([mu5,mu6]), dim=<span class="n">1</span>)
+
+<span class="k">def</span> <span class="f">classify</span>(x, tau=<span class="n">0.62</span>):
+    sim = mus @ F.normalize(x, dim=<span class="n">0</span>)   <span class="c"># coseno</span>
+    p   = base_clf(x).softmax(<span class="n">0</span>)        <span class="c"># 5 clases</span>
+    <span class="k">if</span> sim.max() &gt; tau <span class="k">and</span> sim.max() &gt; p.max():
+        <span class="k">return</span> <span class="n">5</span> + sim.argmax()        <span class="c"># clase nueva</span>
+    <span class="k">return</span> p.argmax()                  <span class="c"># clase base</span></div>
+    </div>
+    <div class="col" style="flex:.8;justify-content:center">
+      <div class="points">
+        <div class="pt frag" data-frag="2"><span class="mk">·</span><span class="tx"><span class="mono">.mean(0)</span> → el centroide. Una línea.</span></div>
+        <div class="pt frag" data-frag="3"><span class="mk">·</span><span class="tx"><span class="mono">tau</span> → calibrado en dev. Cero <span class="mono">.backward()</span>.</span></div>
+        <div class="pt frag" data-frag="4"><span class="mk">·</span><span class="tx">La solución de referencia asignaba las clases nuevas al azar; este método la supera con holgura.</span></div>
+      </div>
+    </div>
+  </div>
+`);
+
+/* 29 · TRAMPAS Y MEJORAS */
+slide(`
+  <div class="eyebrow"><span>Caso · para el examen real</span><span class="num">29</span></div>
+  <h2 style="max-width:24ch">Errores frecuentes y <span class="em">extensiones</span></h2>
+  <div class="body" style="margin-top:34px;gap:56px">
+    <div class="col" style="flex:1">
+      <div class="tag" style="color:var(--accent)">Trampas</div>
+      <div class="points" style="margin-top:18px">
+        <div class="pt frag" data-frag="1"><span class="mk">·</span><span class="tx">Omitir la <b>normalización</b> antes de comparar distancias.</span></div>
+        <div class="pt frag" data-frag="2"><span class="mk">·</span><span class="tx">Calibrar τ sobre <b>entrenamiento</b> en lugar de validación.</span></div>
+        <div class="pt frag" data-frag="3"><span class="mk">·</span><span class="tx">Inferencia con bucle <span class="mono">for</span>, que excede el límite de tiempo.</span></div>
+      </div>
+    </div>
+    <div class="col" style="flex:1">
+      <div class="tag" style="color:var(--green)">Mejoras</div>
+      <div class="points" style="margin-top:18px">
+        <div class="pt frag" data-frag="4"><span class="mk">·</span><span class="tx">Múltiples centroides por clase cuando la distribución es multimodal.</span></div>
+        <div class="pt frag" data-frag="5"><span class="mk">·</span><span class="tx">Uso de la mediana en presencia de valores atípicos.</span></div>
+        <div class="pt frag" data-frag="6"><span class="mk">·</span><span class="tx">Generalización a aprendizaje con pocos ejemplos y detección de OOD.</span></div>
+      </div>
+    </div>
+  </div>
+`);
+
+/* 30 · CIERRE */
+slide(`
+  <div class="titleslide" style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div class="eyebrow">Síntesis</div>
+    <h1 style="max-width:22ch;font-size:54px">Geometría sobre <span class="it">representaciones</span> de calidad</h1>
+    <div class="points frag" data-frag="1" style="margin-top:40px">
+      <div class="pt"><span class="mk">μ</span><span class="tx">El promedio de una clase define su prototipo.</span></div>
+      <div class="pt"><span class="mk">d</span><span class="tx">La clasificación equivale a seleccionar el centroide más cercano.</span></div>
+      <div class="pt"><span class="mk">τ</span><span class="tx">Un umbral calibrado, no un parámetro aprendido.</span></div>
+    </div>
+    <div class="note frag" data-frag="2" style="margin-top:40px"><p>Conviene interpretar una restricción inusual del enunciado como una indicación del método esperado.</p></div>
+    <p class="small frag" data-frag="3" style="margin-top:32px">A continuación: implementación sobre el notebook original del problema.</p>
+  </div>
+`);
+/* ============================================================
+   RENDER + NAVEGACIÓN POR FRAGMENTOS
+   ============================================================ */
+const deck=document.getElementById('deck');
+SLIDES.forEach((s,i)=>{const d=document.createElement('section');d.className='slide';d.innerHTML=s.html;deck.appendChild(d);});
+const els=[...document.querySelectorAll('.slide')];
+document.getElementById('tot').textContent=SLIDES.length;
+
+function fragsIn(el){return [...el.querySelectorAll('.frag')];}
+
+/* Todo el texto aparece de una al entrar (con un leve escalonado visual).
+   Los clics avanzan ANIM.step, que las figuras animadas leen para sus fases. */
+function revealAllText(el){
+  fragsIn(el).forEach((f,i)=>{
+    f.style.transitionDelay=(i*0.06)+'s';
+    f.classList.add('in');
+  });
+}
+
+function applyDots(){
+  const fd=document.getElementById('fdots');
+  fd.innerHTML='';
+  if(stepMax<=0)return;                       // sin pasos de animación → sin puntos
+  for(let i=0;i<=stepMax;i++){
+    const s=document.createElement('span');
+    s.className='fd'+(i<=ANIM.step?' on':'');
+    fd.appendChild(s);
+  }
+}
+
+function show(n){
+  n=clamp(n,0,SLIDES.length-1);
+  if(ANIM.raf){cancelAnimationFrame(ANIM.raf);ANIM.raf=null;}
+  els.forEach(e=>e.classList.remove('active'));
+  const el=els[n];el.classList.add('active');idx=n;
+  el.classList.toggle('stage',!!SLIDES[n].stage);
+  ANIM.step=0;
+  stepMax=SLIDES[n].steps||0;                 // pasos de animación de esta slide
+  document.getElementById('cur').textContent=n+1;
+  document.getElementById('bar').style.width=((n+1)/SLIDES.length*100)+'%';
+  revealAllText(el);
+  applyDots();
+  const init=SLIDES[n].init;
+  if(init&&typeof window[init]==='function')setTimeout(()=>window[init](el),40);
+}
+function next(){ if(ANIM.step<stepMax){ANIM.step++;ANIM.stepT=performance.now();applyDots();return;} show(idx+1); }
+function prev(){ if(ANIM.step>0){ANIM.step--;ANIM.stepT=performance.now();applyDots();return;} show(idx-1); }
+window.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();next();}
+  else if(e.key==='ArrowLeft'){e.preventDefault();prev();}
+  else if(e.key==='Home')show(0);
+  else if(e.key==='End')show(SLIDES.length-1);
+});
+
+/* ============================================================
+   FIGURAS (estáticas o levemente animadas)
+   ============================================================ */
+function seeded(s0){let s=s0;return()=>{s=(s*9301+49297)%233280;return s/233280;};}
+
+function tokInit(){const x=cx('cv-tok');if(!x)return;const W=x._w,H=x._h;
+  const toks=['El','vector','de','token','##ización','es','sub','##palabra'];
+  const sentence='El vector de tokenización es subpalabra';
+  const cols=[C.accent2,C.accent,C.soft,C.accent2,C.gold,C.soft,C.accent2,C.gold];
+  const tmp=document.createElement('canvas').getContext('2d');tmp.font="16px 'IBM Plex Mono'";
+  // medir ancho total y centrar la fila
+  const gap=12;let total=0;const ws=toks.map(t=>{const w=tmp.measureText(t).width+22;total+=w;return w;});
+  total+=gap*(toks.length-1);
+  let lay=[],startx=(W-total)/2,cxp=startx,cy=H*0.47;
+  toks.forEach((t,i)=>{lay.push({t,w:ws[i],x:cxp,y:cy,c:cols[i]});cxp+=ws[i]+gap;});
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    const e=stepElapsed();
+    if(ANIM.step<1){
+      x.fillStyle=C.ink;x.font="26px 'Newsreader', serif";x.textAlign='center';
+      x.fillText(sentence,W/2,H/2+4);
+      if(Math.sin(t*4)>0){const w=x.measureText(sentence).width;
+        ln(x,{x:W/2+w/2+8,y:H/2-14},{x:W/2+w/2+8,y:H/2+12},C.faint,2);}
+      txt(x,{x:W/2,y:H/2+44},'texto crudo · clic para segmentar',C.faint,13,0,0,'center');
+      return;
+    }
+    lay.forEach((o,i)=>{const p=pop(stagger(e,i,0.07,0.45));if(p<=0)return;
+      const oy=(1-p)*-14;x.save();x.globalAlpha=clamp(p*1.5,0,1);
+      const sc=0.85+0.15*p;const w=o.w*sc,bx=o.x+(o.w-w)/2;
+      x.fillStyle='#fbfaf6';x.strokeStyle=o.c;x.lineWidth=1.4;
+      roundRect(x,bx,o.y-22+oy,w,44,7);x.fill();x.stroke();
+      x.fillStyle=o.c;x.font="17px 'IBM Plex Mono'";x.textAlign='center';
+      x.fillText(o.t,o.x+o.w/2,o.y+5+oy);
+      txt(x,{x:o.x+o.w/2,y:o.y+38+oy},'#'+(1000+i*137%900),C.faint,12,0,0,'center');
+      x.restore();});
+  });
+}
+function roundRect(x,X,Y,w,h,r){x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);
+  x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath();}
+
+function clustersFig(seed,spread=0.06){const r=seeded(seed);const cs=[
+  {x:.26,y:.34,c:C.accent2},{x:.5,y:.62,c:C.accent2},{x:.72,y:.32,c:C.accent},{x:.42,y:.78,c:C.gold},{x:.74,y:.7,c:C.green}];
+  const pts=[];cs.forEach((o,k)=>{for(let i=0;i<9;i++){const a=r()*7,rr=r()*spread;
+    // origen aleatorio para "volar" hacia su destino
+    pts.push({x:o.x+Math.cos(a)*rr,y:o.y+Math.sin(a)*rr*.9,c:o.c,
+      ox:0.5+(r()-0.5)*0.15,oy:0.5+(r()-0.5)*0.15});}});return pts;}
+
+function embInit(){const x=cx('cv-emb');if(!x)return;const W=x._w,H=x._h;const pts=clustersFig(7,.07);
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);grid(x);
+    if(ANIM.step<1){
+      pts.forEach((p,i)=>{const a=t*0.5+i;const jx=p.ox+Math.cos(a)*0.012,jy=p.oy+Math.sin(a*1.3)*0.012;
+        dot(x,SP(x,{x:jx,y:jy}),4,C.faint,0.5);});
+      txt(x,{x:W/2,y:SY(x,1)+30},'tokens sin estructura · clic para proyectar',C.faint,12,0,0,'center');
+      return;
+    }
+    const e=stepElapsed();
+    pts.forEach((p,i)=>{const pr=easeInOutCubic(stagger(e,i,0.02,0.8));
+      const pp=SP(x,{x:lerp(p.ox,p.x,pr),y:lerp(p.oy,p.y,pr)});
+      if(pr<1)spark(x,pp,4,p.c,0.4+0.6*pr);else dot(x,pp,5,p.c);});
+    if(e>0.9){const cs=[[.26,.34],[.5,.62],[.72,.32],[.42,.78],[.74,.7]];
+      cs.forEach(c=>halo(x,SP(x,{x:c[0],y:c[1]}),46,C.accent2,0.06*clamp((e-0.9)/0.4,0,1)));}
+  });}
+
+function frozenInit(){const x=cx('cv-frozen');if(!x)return;const W=x._w,H=x._h;const r=seeded(7);
+  // tres "temas" de frases, cada uno con color; salen como un cúmulo a la derecha
+  const themes=[
+    {label:'“el clima de hoy…”',col:C.accent2,cx:.82,cy:.26},
+    {label:'“precio de las acciones…”',col:C.gold,cx:.86,cy:.52},
+    {label:'“resultado del partido…”',col:C.accent,cx:.82,cy:.78},
+  ];
+  // puntos destino por tema
+  themes.forEach(th=>{th.pts=[];for(let i=0;i<7;i++){const a=r()*7,rr=r()*.05;
+    th.pts.push({x:th.cx+Math.cos(a)*rr,y:th.cy+Math.sin(a)*rr});}});
+  const encX=.5;  // posición del encoder (relativa)
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    // caja del encoder en el centro
+    const ew=150,eh=92;const ec=SP(x,{x:encX,y:.5});
+    x.save();x.fillStyle='#eef1f4';x.strokeStyle=C.accent2;x.lineWidth=1.6;
+    roundRect(x,ec.x-ew/2,ec.y-eh/2,ew,eh,12);x.fill();x.stroke();x.restore();
+    txt(x,{x:ec.x,y:ec.y-4},'encoder',C.accent2,17,0,0,'center');
+    txt(x,{x:ec.x,y:ec.y+18},'(preentrenado)',C.faint,12,0,0,'center');
+
+    if(ANIM.step<1){
+      // las frases esperan a la izquierda, pulsando
+      themes.forEach((th,i)=>{const p=SP(x,{x:0.04,y:0.26+i*0.24});
+        const ph=0.5+0.5*Math.sin(t*2.2+i);
+        x.save();x.globalAlpha=0.6+0.4*ph;txt(x,p,th.label,th.col,15,0,5,'left','serif');x.restore();});
+      txt(x,{x:ec.x,y:SY(x,1)-6},'clic para codificar',C.faint,12,0,0,'center');
+      return;
+    }
+    const e=stepElapsed();
+    themes.forEach((th,ti)=>{
+      const start=SP(x,{x:0.06,y:0.26+ti*0.24});
+      // 1) la frase viaja hacia el encoder
+      const phase=clamp(e*1.3-ti*0.12,0,1.6);
+      if(phase<1){const pr=easeInOutCubic(clamp(phase,0,1));
+        const fp={x:lerp(start.x,ec.x-ew/2,pr),y:lerp(start.y,ec.y,pr)};
+        x.save();x.globalAlpha=clamp(1-pr*0.5,0,1);txt(x,fp,th.label,th.col,15,0,5,'left','serif');x.restore();
+      } else {
+        // la frase ya entró: aún rotulada tenue en su origen
+        x.save();x.globalAlpha=0.35;txt(x,start,th.label,th.col,14,0,5,'left','serif');x.restore();
+      }
+      // 2) salen puntos del encoder y se agrupan en su cúmulo
+      if(phase>1){const op=clamp((phase-1)/0.6,0,1);
+        th.pts.forEach((pp,j)=>{const jp=easeOutCubic(clamp(op*1.4-j*0.05,0,1));
+          const from={x:ec.x+ew/2,y:ec.y};const to=SP(x,pp);
+          const cur={x:lerp(from.x,to.x,jp),y:lerp(from.y,to.y,jp)};
+          if(jp<1)spark(x,cur,4,th.col,clamp(jp*1.4,0,1));else dot(x,cur,5,th.col);});
+        // halo del cúmulo al asentarse
+        if(op>0.9){const c=SP(x,{x:th.cx,y:th.cy});halo(x,c,40,th.col,0.07);}
+      }
+    });
+  });}
+
+function sepInit(){ANIM.sepSpread=14;const x=cx('cv-sep');if(!x)return;const W=x._w,H=x._h;
+  const r=seeded(3);const base=[];for(let i=0;i<26;i++)base.push({a0:r(),a1:r(),cls:i<13?0:1});
+  const cA={x:.34,y:.5},cB={x:.66,y:.5};const fx=0.5; // frontera en el centro relativo
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);grid(x);
+    const sp=(ANIM.sepSpread||14)/100;
+    // frontera vertical (recta) que entra trazándose
+    const ft=clamp(t/0.6,0,1);const fX=SX(x,fx);
+    trace(x,{x:fX,y:SY(x,0)},{x:fX,y:SY(x,1)},ft,'rgba(28,26,23,.45)',2);
+    if(ft>=1)txt(x,{x:fX,y:SY(x,0)-2},'la recta',C.soft,11,0,-4,'center');
+    // etiquetas de clase
+    txt(x,SP(x,{x:0.14,y:0.12}),'clase A',C.accent2,14,0,0,'left','serif');
+    txt(x,SP(x,{x:0.80,y:0.12}),'clase B',C.accent,14,0,0,'left','serif');
+    // puntos; marca los que caen del lado equivocado de la recta
+    let wrong=0;
+    base.forEach((p,i)=>{const c=p.cls?cB:cA;const col=p.cls?C.accent:C.accent2;
+      const ap=easeOutCubic(stagger(t,i,0.015,0.5));if(ap<=0)return;
+      const j=0.004*Math.sin(t*1.5+i);
+      const relx=c.x+(p.a0-0.5)*sp*2+j, rely=c.y+(p.a1-0.5)*sp*2;
+      const pp=SP(x,{x:relx,y:rely});
+      // ¿mal clasificado? clase A debería quedar a la izq de fx; clase B a la der
+      const bad=(p.cls===0&&relx>fx)||(p.cls===1&&relx<fx);
+      if(bad){wrong++;ring(x,pp,9,C.accent,2,ap);}
+      dot(x,pp,5*ap,col,clamp(ap*1.3,0,1));});
+    // veredicto en vivo
+    const read=document.getElementById('sep-read');
+    if(read){if(wrong===0)read.innerHTML='la recta separa <b>todo bien</b>';
+      else read.innerHTML=`<b style="color:var(--accent)">${wrong} mal clasificados</b> · la recta ya no basta`;}
+  });}
+
+function headInit(){const x=cx('cv-head');if(!x)return;const W=x._w,H=x._h;
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    const enc={x:W*.30,y:H*.5,w:150,h:120},head={x:W*.72,y:H*.5,w:120,h:60};
+    // encoder
+    x.save();x.fillStyle='#eef1f4';x.strokeStyle=C.accent2;x.lineWidth=1.6;
+    roundRect(x,enc.x-enc.w/2,enc.y-enc.h/2,enc.w,enc.h,10);x.fill();x.stroke();x.restore();
+    txt(x,{x:enc.x,y:enc.y-6},'encoder',C.accent2,16,0,0,'center');
+    txt(x,{x:enc.x,y:enc.y+16},'(congelado)',C.faint,12,0,0,'center');
+    // cabeza
+    x.save();x.fillStyle='#f7eded';x.strokeStyle=C.accent;x.lineWidth=1.6;
+    roundRect(x,head.x-head.w/2,head.y-head.h/2,head.w,head.h,8);x.fill();x.stroke();x.restore();
+    txt(x,{x:head.x,y:head.y+5},'cabeza',C.accent,15,0,0,'center');
+    ln(x,{x:enc.x+enc.w/2,y:enc.y},{x:head.x-head.w/2,y:head.y},C.soft,1.5);
+    txt(x,{x:40,y:enc.y+5},'texto →',C.soft,14);
+    txt(x,{x:head.x+head.w/2+14,y:head.y+5},'→ clase',C.soft,14);
+    // flujo de datos: paquetes recorriendo encoder→cabeza→salida
+    const segIn={a:{x:46,y:enc.y},b:{x:enc.x-enc.w/2,y:enc.y}};
+    const segMid={a:{x:enc.x+enc.w/2,y:enc.y},b:{x:head.x-head.w/2,y:head.y}};
+    const segOut={a:{x:head.x+head.w/2,y:head.y},b:{x:head.x+head.w/2+58,y:head.y}};
+    for(let k=0;k<3;k++){const tt=(t*0.4+k/3)%1;let pos,col;
+      if(tt<.4){pos=travel(segIn.a,segIn.b,tt/.4);col=C.accent2;}
+      else if(tt<.7){pos=travel(segMid.a,segMid.b,(tt-.4)/.3);col=C.accent2;}
+      else{pos=travel(segOut.a,segOut.b,(tt-.7)/.3);col=C.accent;}
+      dot(x,pos,3.5,col,0.9);}
+  });}
+
+function loraInit(){const x=cx('cv-lora');if(!x)return;const W=x._w,H=x._h;
+  const y0=SY(x,0),y1=SY(x,1),midY=(y0+y1)/2;
+  const SUB=document.getElementById('lora-sub');
+  const subs=[
+    'Un modelo ya sabe leer. Para una tarea nueva, no lo reescribes entero.',
+    '<b>Opción A — completo:</b> re-entrenas los 110 millones de parámetros. Caro y una copia por tarea.',
+    '<b>Opción B — eficiente:</b> congelas el modelo y entrenas un adaptador de 0.3 M (≈0.3%).',
+    'Misma calidad. Un solo modelo + adaptadores diminutos, uno por tarea.'
+  ];
+  // medidor de costo (barra)
+  function meter(cxp,cy,frac,col,label){const w=180,h=12;
+    x.save();x.fillStyle='#e7e3d8';roundRect(x,cxp-w/2,cy,w,h,6);x.fill();
+    x.fillStyle=col;const fw=Math.max(6,w*clamp(frac,0,1));roundRect(x,cxp-w/2,cy,fw,h,6);x.fill();x.restore();
+    txt(x,{x:cxp,y:cy-8},label,C.soft,12,0,0,'center');}
+  // "cerebro" = modelo grande, dibujado como malla de nodos
+  function brain(cxp,cy,scale,col,glow,pulse){
+    const nodes=[[-.5,-.55],[.5,-.55],[0,-.2],[-.7,.05],[.7,.05],[-.35,.5],[.35,.5],[0,.85]];
+    const R=70*scale;
+    if(glow)halo(x,{x:cxp,y:cy},R*1.5,col,0.10*(pulse||1));
+    x.save();x.strokeStyle=col;x.globalAlpha=0.5;x.lineWidth=1.2;
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      if((i*7+j)%3===0){x.beginPath();
+        x.moveTo(cxp+nodes[i][0]*R,cy+nodes[i][1]*R);
+        x.lineTo(cxp+nodes[j][0]*R,cy+nodes[j][1]*R);x.stroke();}}
+    x.restore();
+    nodes.forEach((nd,i)=>{const p={x:cxp+nd[0]*R,y:cy+nd[1]*R};
+      const pp=pulse?(0.7+0.3*Math.sin(performance.now()/200+i)):1;
+      dot(x,p,5.5*scale,col,pp);});
+  }
+
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    const step=ANIM.step;const e=stepElapsed();
+    if(SUB)SUB.innerHTML=subs[clamp(step,0,3)];
+
+    if(step===0){
+      // un modelo grande, ya entrenado, leyendo una frase
+      const bx=W*0.5,by=midY-10;
+      brain(bx,by,1.25,C.accent2,true,1);
+      txt(x,{x:bx,y:by-118},'modelo ya entrenado',C.accent2,16,0,0,'center','serif');
+      txt(x,{x:bx,y:by-96},'110 millones de parámetros',C.faint,12,0,0,'center');
+      // frase de ejemplo entrando
+      const fx=clamp(t*0.4,0,1);const from={x:W*0.16,y:by};
+      const to={x:bx-90,y:by};
+      const fp={x:lerp(from.x,to.x,easeInOutCubic(fx)),y:by};
+      x.save();x.globalAlpha=clamp(1-fx*0.4,0.4,1);
+      txt(x,fp,'“me encantó la película”',C.soft,15,0,5,'center','serif');x.restore();
+      txt(x,{x:bx,y:by+128},'tarea nueva: ¿el tuit es positivo o negativo?',C.ink,15,0,0,'center');
+      txt(x,{x:bx,y:by+150},'clic para ver las dos formas de adaptarlo',C.faint,12,0,0,'center');
+      return;
+    }
+
+    if(step===1){
+      // OPCIÓN A: re-entrenar TODO
+      const bx=W*0.5,by=midY-24;
+      // todos los nodos en rojo, vibrando = se reescriben
+      brain(bx,by,1.25,C.accent,true,1);
+      txt(x,{x:bx,y:by-118},'Opción A · completo',C.accent,17,0,0,'center','serif');
+      txt(x,{x:bx,y:by-96},'reescribe los 110 M de parámetros',C.accent,13,0,0,'center');
+      const fill=clamp(e/1.2,0,1);
+      meter(bx,by+118,fill,C.accent,'costo de entrenamiento');
+      if(e>1.0){txt(x,{x:bx,y:by+158},'1 copia completa del modelo por cada tarea',C.faint,12,0,0,'center');}
+      return;
+    }
+
+    if(step>=2){
+      // OPCIÓN B: congelar + adaptador
+      const bx=W*0.42,by=midY-24;
+      brain(bx,by,1.15,'#b9b3a6',false,0); // gris = congelado
+      txt(x,{x:bx,y:by-112},'Opción B · eficiente',C.green,17,0,0,'center','serif');
+      // candado sobre el cerebro
+      x.font="20px 'IBM Plex Mono'";x.textAlign='center';x.fillStyle='#8d897f';
+      x.fillText('🔒',bx,by+6);
+      txt(x,{x:bx,y:by+96},'modelo congelado',C.faint,12,0,0,'center');
+
+      // adaptador pequeño que se engancha
+      const ax=bx+150,ay=by;const ap=easeOutBack(clamp(e/0.6,0,1));
+      ln(x,{x:bx+70,y:by},{x:ax-26,y:ay},'rgba(63,111,75,.5)',1.5);
+      x.save();x.globalAlpha=clamp(ap,0,1);const s=ap;
+      const ph=0.6+0.4*Math.sin(t*4);halo(x,{x:ax,y:ay},34*s,C.green,0.22*ph);
+      x.fillStyle='#eef4ee';x.strokeStyle=C.green;x.lineWidth=1.8;
+      roundRect(x,ax-26*s,ay-30*s,52*s,60*s,9);x.fill();x.stroke();x.restore();
+      if(ap>0.6){txt(x,{x:ax,y:ay-2},'adapt.',C.green,12,0,0,'center');
+        txt(x,{x:ax,y:ay+16},'0.3 M',C.green,13,0,0,'center');}
+      txt(x,{x:(bx+ax)/2,y:by+128},'entrenas solo 0.3 M (≈0.3%)',C.green,14,0,0,'center');
+      const fill=0.04;meter((bx+ax)/2,by+150,fill,C.green,'costo de entrenamiento');
+
+      if(step>=3){
+        // varios adaptadores para varias tareas, mismo modelo
+        const tasks=[{n:'sentimiento',c:C.green},{n:'spam',c:C.gold},{n:'legal',c:C.accent2}];
+        const rx=W*0.80;
+        txt(x,{x:rx,y:by-112},'un modelo, muchas tareas',C.ink,15,0,0,'center','serif');
+        tasks.forEach((tk,i)=>{const ty=by-50+i*52;const tp=easeOutBack(clamp((e-i*0.2)/0.5,0,1));if(tp<=0)return;
+          x.save();x.globalAlpha=clamp(tp,0,1);
+          x.fillStyle='#fbfaf6';x.strokeStyle=tk.c;x.lineWidth=1.5;
+          roundRect(x,rx-70,ty-16,140,32,7);x.fill();x.stroke();
+          x.fillStyle=tk.c;x.font="13px 'IBM Plex Mono'";x.textAlign='center';
+          x.fillText('adaptador · '+tk.n,rx,ty+4);x.restore();});
+      }
+      return;
+    }
+  });}
+
+function arInit(){const x=cx('cv-ar');if(!x)return;const W=x._w,H=x._h;
+  const seq=['El','equipo','de','la','IOAI'];
+  const tmp=document.createElement('canvas').getContext('2d');tmp.font="17px 'IBM Plex Mono'";
+  const gap=10;const ws=seq.map(t=>tmp.measureText(t).width+22);const qw=46;
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    const n=clamp(ANIM.step,0,seq.length);const e=stepElapsed();
+    let shownW=0;for(let i=0;i<n;i++)shownW+=ws[i]+gap;
+    const showQ=n<seq.length;if(showQ)shownW+=qw;else shownW=Math.max(0,shownW-gap);
+    let cxp=(W-shownW)/2,cy=H*0.47;
+    for(let i=0;i<n;i++){const tk=seq[i];const w=ws[i];
+      const isNew=(i===n-1);const p=isNew?pop(clamp(e/0.4,0,1)):1;
+      const oy=(1-p)*-12;x.save();x.globalAlpha=clamp(p*1.4,0,1);
+      x.fillStyle='#eef1f4';x.strokeStyle=C.accent2;x.lineWidth=1.3;
+      roundRect(x,cxp,cy-22+oy,w,44,7);x.fill();x.stroke();
+      x.fillStyle=C.accent2;x.font="17px 'IBM Plex Mono'";x.textAlign='center';
+      x.fillText(tk,cxp+w/2,cy+6+oy);x.restore();cxp+=w+gap;}
+    if(showQ){const pulse=0.5+0.5*Math.sin(t*4);
+      halo(x,{x:cxp+qw/2,y:cy},28,C.accent,0.16*pulse);
+      x.save();x.globalAlpha=0.55+0.45*pulse;x.fillStyle='#f7eded';x.strokeStyle=C.accent;
+      x.lineWidth=1.3;x.setLineDash([4,4]);roundRect(x,cxp,cy-22,qw,44,7);x.fill();x.stroke();
+      x.setLineDash([]);x.restore();
+      x.fillStyle=C.accent;x.textAlign='center';x.font="18px 'IBM Plex Mono'";x.fillText('?',cxp+qw/2,cy+7);
+      txt(x,{x:cxp+qw/2,y:cy+44},n===0?'clic para generar':'siguiente',C.faint,12,0,0,'center');}
+    else txt(x,{x:W/2,y:cy+50},'… y así, token a token',C.faint,13,0,0,'center');
+  });}
+
+function transInit(){const x=cx('cv-trans');if(!x)return;const W=x._w,H=x._h;
+  const enc={x:W*.28,y:H*.5},dec={x:W*.72,y:H*.5},mid={x:W*.5,y:H*.5};
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    txt(x,{x:enc.x,y:enc.y-50},'“gato negro”',C.soft,15,0,0,'center','serif');
+    x.save();x.fillStyle='#eef1f4';x.strokeStyle=C.accent2;x.lineWidth=1.5;
+    roundRect(x,enc.x-58,enc.y-22,116,44,9);x.fill();x.stroke();x.restore();
+    txt(x,{x:enc.x,y:enc.y+5},'encoder',C.accent2,14,0,0,'center');
+    x.save();x.fillStyle='#fdf6ea';x.strokeStyle=C.gold;x.lineWidth=1.5;
+    roundRect(x,dec.x-58,dec.y-22,116,44,9);x.fill();x.stroke();x.restore();
+    txt(x,{x:dec.x,y:dec.y+5},'decoder',C.gold,14,0,0,'center');
+    txt(x,{x:dec.x,y:dec.y+50},'“black cat”',C.soft,15,0,0,'center','serif');
+    ln(x,{x:enc.x+58,y:enc.y},mid,C.soft,1.4);ln(x,mid,{x:dec.x-58,y:dec.y},C.soft,1.4);
+    // ciclo: tokens entran al encoder → se comprimen al "significado" → emanan del decoder
+    const cyc=(t*0.4)%1;
+    if(cyc<.5){const p=cyc/.5;const from={x:enc.x,y:enc.y-46};
+      dot(x,travel(from,mid,easeInOutCubic(p),0),4.5,C.accent2,clamp(1-p*0.3,0,1));}
+    else{const p=(cyc-.5)/.5;
+      dot(x,travel(mid,{x:dec.x,y:dec.y+46},easeInOutCubic(p),0),4.5,C.gold,clamp(0.4+p,0,1));}
+    // el "significado" late en el centro
+    const ph=0.5+0.5*Math.sin(t*2);halo(x,mid,18,C.soft,0.18*ph);dot(x,mid,7,C.soft);
+    txt(x,{x:mid.x,y:mid.y-18},'significado',C.faint,11,0,0,'center');
+  });}
+
+function clipCat(x,cx0,cy0,s){ // gatito simple dentro de un marco de foto
+  x.save();
+  // marco
+  x.fillStyle='#fbfaf6';x.strokeStyle='#c9c2b4';x.lineWidth=1.6;
+  roundRect(x,cx0-46*s,cy0-40*s,92*s,80*s,8);x.fill();x.stroke();
+  // cara del gato
+  x.translate(cx0,cy0+4*s);x.scale(s,s);
+  x.strokeStyle=C.soft;x.fillStyle=C.soft;x.lineWidth=2.2;
+  // orejas
+  x.beginPath();x.moveTo(-20,-18);x.lineTo(-12,-30);x.lineTo(-4,-18);x.closePath();
+  x.moveTo(20,-18);x.lineTo(12,-30);x.lineTo(4,-18);x.closePath();x.fill();
+  // cabeza
+  x.beginPath();x.arc(0,0,20,0,7);x.stroke();
+  // ojos
+  x.beginPath();x.arc(-7,-2,2.2,0,7);x.arc(7,-2,2.2,0,7);x.fill();
+  // nariz + bigotes
+  x.beginPath();x.moveTo(0,4);x.lineTo(0,7);x.moveTo(-3,9);x.lineTo(3,9);x.stroke();
+  x.beginPath();x.moveTo(-20,6);x.lineTo(-8,5);x.moveTo(-20,12);x.lineTo(-8,9);
+  x.moveTo(20,6);x.lineTo(8,5);x.moveTo(20,12);x.lineTo(8,9);x.stroke();
+  x.restore();
+}
+function clipInit(){const x=cx('cv-clip');if(!x)return;const W=x._w,H=x._h;
+  const SUB=document.getElementById('clip-sub');
+  // tres frases candidatas; la correcta es la 0
+  const caps=[
+    {t:'“un gato en el sofá”',correct:true, sp:{x:.70,y:.30}},
+    {t:'“un perro en el parque”',correct:false,sp:{x:.84,y:.58}},
+    {t:'“una pizza en la mesa”',correct:false,sp:{x:.66,y:.82}},
+  ];
+  const imgSp={x:.56,y:.34}; // la foto cae junto a la frase correcta
+  const subs=[
+    'Una foto y tres frases candidatas. ¿Cuál la describe?',
+    'CLIP convierte foto y frases en puntos del <b>mismo espacio</b>.',
+    'La respuesta es la frase <b>más cercana</b> a la foto.'
+  ];
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    const step=ANIM.step;const e=stepElapsed();
+    if(SUB)SUB.innerHTML=subs[clamp(step,0,2)];
+
+    if(step<1){
+      // escena literal: foto a la izquierda, frases a la derecha
+      clipCat(x,SX(x,0.22),SY(x,0.5),1.3);
+      txt(x,{x:SX(x,0.22),y:SY(x,0.5)+74},'foto de entrada',C.faint,12,0,0,'center');
+      caps.forEach((c,i)=>{const cy=SY(x,0.28+i*0.22);const p=easeOutCubic(stagger(t,i,0.2,0.6));
+        x.save();x.globalAlpha=clamp(p,0,1);
+        x.fillStyle='#fbfaf6';x.strokeStyle='#c9c2b4';x.lineWidth=1.4;
+        roundRect(x,SX(x,0.55),cy-20,300,40,8);x.fill();x.stroke();
+        x.fillStyle=C.soft;x.font="16px 'Newsreader', serif";x.textAlign='left';
+        x.fillText(c.t,SX(x,0.55)+16,cy+6);x.restore();});
+      txt(x,{x:W/2,y:SY(x,1)-6},'clic para colocarlas en el espacio compartido',C.faint,12,0,0,'center');
+      return;
+    }
+
+    // paso 1+: espacio compartido
+    grid(x);
+    txt(x,{x:SX(x,0.5),y:SY(x,0)-2},'espacio compartido (texto + imagen)',C.faint,12,0,-4,'center');
+    // foto vuela a su punto
+    const imgP=SP(x,imgSp);
+    const ie=easeInOutCubic(clamp(e/0.7,0,1));
+    const ifrom=SP(x,{x:0.1,y:0.5});
+    const icur={x:lerp(ifrom.x,imgP.x,ie),y:lerp(ifrom.y,imgP.y,ie)};
+    // frases vuelan a sus puntos
+    let best=null,bd=1e9;
+    caps.forEach((c,i)=>{const cp=SP(x,c.sp);const ce=easeInOutCubic(clamp(e/0.7-0.1*i,0,1));
+      const cfrom=SP(x,{x:1.0,y:0.3+i*0.22});
+      const ccur={x:lerp(cfrom.x,cp.x,ce),y:lerp(cfrom.y,cp.y,ce)};
+      c._cur=ccur;const d=D(imgP,cp);if(d<bd){bd=d;best=i;}});
+
+    if(step>=2){
+      // distancias de la foto a cada frase; resalta la más cercana
+      caps.forEach((c,i)=>{const win=i===best;
+        if(win){ln(x,icur,c._cur,C.green,2.5);
+          const fl=(t*0.8)%1;spark(x,travel(icur,c._cur,fl),3,C.green,0.7);}
+        else ln(x,icur,c._cur,'rgba(140,135,125,.35)',1.2,[4,5]);});
+    }
+    // dibujar puntos de frases
+    caps.forEach((c,i)=>{const win=(step>=2&&i===best);const col=win?C.green:C.soft;
+      cross(x,c._cur,6,col,2.2);
+      x.save();x.fillStyle=win?C.green:C.soft;x.font=(win?"600 14px":"13px")+" 'Newsreader', serif";
+      x.textAlign='left';x.fillText(c.t,c._cur.x+12,c._cur.y+5);x.restore();
+      if(win){const ph=0.5+0.5*Math.sin(t*3);halo(x,c._cur,20,C.green,0.2*ph);}});
+    // punto de la foto (con mini-gato)
+    const ph=0.5+0.5*Math.sin(t*2.5);halo(x,icur,22,C.accent2,0.18*ph);
+    dot(x,icur,9,C.accent2);txt(x,{x:icur.x,y:icur.y-18},'foto',C.accent2,12,0,0,'center');
+
+    if(step>=2&&best!==null&&e>0.6){
+      txt(x,{x:SX(x,0.5),y:SY(x,1)+2},'→ '+caps[best].t.replace(/[“”]/g,'')+' es la más cercana',C.green,14,0,0,'center');
+    }
+  });}
+
+function state2Init(){const x=cx('cv-state2');if(!x)return;const W=x._w,H=x._h;const r=seeded(42);
+  const base=[];for(let k=0;k<5;k++){const cxk=.2+(k%3)*.22,cyk=.3+Math.floor(k/3)*.34;
+    for(let i=0;i<8;i++){const a=r()*7,rr=r()*.05;base.push({x:cxk+Math.cos(a)*rr,y:cyk+Math.sin(a)*rr});}}
+  const c5={x:.8,y:.32},c6={x:.78,y:.74};const n5=[],n6=[];
+  for(let i=0;i<6;i++){const a=r()*7,rr=r()*.045;n5.push({x:c5.x+Math.cos(a)*rr,y:c5.y+Math.sin(a)*rr});}
+  for(let i=0;i<6;i++){const a=r()*7,rr=r()*.045;n6.push({x:c6.x+Math.cos(a)*rr,y:c6.y+Math.sin(a)*rr});}
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);grid(x);
+    base.forEach((p,i)=>{const ap=easeOutCubic(stagger(t,i,0.01,0.5));
+      dot(x,SP(x,p),4.5*ap,C.accent2,.8*clamp(ap*1.3,0,1));});
+    [n5,n6].forEach((arr,gi)=>{const col=gi?C.accent:C.gold;
+      arr.forEach((p,i)=>{const e=easeOutBack(stagger(t,i+gi*6,0.05,0.7));if(e<=0)return;
+        const py=lerp(p.y-0.25,p.y,clamp(e,0,1));dot(x,SP(x,{x:p.x,y:py}),5,col);});});
+    const ph=0.5+0.5*Math.sin(t*2);
+    halo(x,SP(x,c5),38,C.gold,0.1*ph);halo(x,SP(x,c6),38,C.accent,0.1*ph);
+    const c5p=SP(x,c5);txt(x,{x:c5p.x,y:c5p.y-26},'clases sin asignar',C.gold,11,0,0,'center');
+  });}
+
+function centInit(){const x=cx('cv-cent');if(!x)return;const W=x._w,H=x._h;const r=seeded(11);
+  const c={x:.46,y:.5};const pts=[];for(let i=0;i<8;i++){const a=r()*7,rr=r()*.14+.03;
+    pts.push({x:c.x+Math.cos(a)*rr,y:c.y+Math.sin(a)*rr});}
+  const mu={x:c.x,y:c.y};
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);grid(x);
+    const mp=SP(x,mu);
+    if(ANIM.step<1){
+      pts.forEach((p,i)=>{const j=0.006*Math.sin(t*1.2+i);dot(x,SP(x,{x:p.x+j,y:p.y}),5,C.gold);});
+      txt(x,{x:W/2,y:SY(x,1)+20},'clic para calcular el centroide',C.faint,12,0,0,'center');
+      return;}
+    const e=stepElapsed();
+    const draw=easeOutCubic(clamp(e/0.5,0,1));
+    pts.forEach(p=>{const pp=SP(x,p);trace(x,pp,mp,draw,rgba(C.gold,0.35),1);});
+    if(e>0.4){const pr=clamp((e-0.4)/0.5,0,1);
+      pts.forEach(p=>{const pp=SP(x,p);const sp=travel(pp,mp,easeInOutCubic(pr));
+        spark(x,sp,3.5,C.gold,0.8*(1-pr));});}
+    pts.forEach(p=>dot(x,SP(x,p),5,C.gold));
+    if(e>0.85){const ap=easeOutElastic(clamp((e-0.85)/0.6,0,1));
+      halo(x,mp,20*ap,C.accent,0.2*clamp(ap,0,1));
+      cross(x,mp,11*ap,C.accent,2.5);ring(x,mp,13,C.accent,1.5,clamp(ap,0,1));
+      txt(x,{x:mp.x,y:mp.y-22},'μ',C.accent,17,0,0,'center','serif');}
+  });}
+
+function ncInit(){const x=cx('cv-nc');if(!x)return;const W=x._w,H=x._h;
+  const cents=[{x:.26,y:.36,c:C.accent2,n:'base'},{x:.72,y:.3,c:C.gold,n:'μ5'},{x:.6,y:.74,c:C.accent,n:'μ6'}];
+  const probe={x:.5,y:.5};const cv=document.getElementById('cv-nc');
+  function set(ev){const r=cv.getBoundingClientRect();probe.x=clamp((ev.clientX-r.left)/r.width,0,1);probe.y=clamp((ev.clientY-r.top)/r.height,0,1);}
+  cv.onmousedown=e=>{ANIM.drag=1;set(e);};window.onmousemove=e=>{if(ANIM.drag)set(e);};window.onmouseup=()=>ANIM.drag=0;
+  cv.ontouchstart=e=>{ANIM.drag=1;set(e.touches[0]);e.preventDefault();};
+  cv.ontouchmove=e=>{if(ANIM.drag){set(e.touches[0]);e.preventDefault();}};cv.ontouchend=()=>ANIM.drag=0;
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    const x0=SX(x,0),y0=SY(x,0),x1=SX(x,1),y1=SY(x,1);
+    const cpts=cents.map(c=>SP(x,c));
+    const step=12;for(let gy=y0;gy<y1;gy+=step)for(let gx=x0;gx<x1;gx+=step){
+      let b=0,bd=1e9;cpts.forEach((cc,i)=>{const d=(gx-cc.x)**2+(gy-cc.y)**2;if(d<bd){bd=d;b=i;}});
+      x.fillStyle=cents[b].c+'14';x.fillRect(gx,gy,step,step);}
+    grid(x);
+    const pp=SP(x,probe);let b=0,bd=1e9;
+    cpts.forEach((cc,i)=>{const d=D(pp,cc);if(d<bd){bd=d;b=i;}});
+    cents.forEach((c,i)=>{const cc=cpts[i];const win=i===b;
+      if(win){ln(x,pp,cc,c.c,2.5);
+        const fl=(t*0.8)%1;const fp=travel(pp,cc,fl);spark(x,fp,3,c.c,0.7*(1-Math.abs(fl-0.5)*2+0.3));}
+      else ln(x,pp,cc,'rgba(140,135,125,.3)',1,[4,5]);
+      if(win){const ph=0.5+0.5*Math.sin(t*3);halo(x,cc,16,c.c,0.18*ph);}
+      cross(x,cc,8,c.c,2.5);txt(x,{x:cc.x,y:cc.y-15},c.n,c.c,13,0,0,'center');});
+    dot(x,pp,7,'#1c1a17');ring(x,pp,11,cents[b].c,2);
+    const ro=document.getElementById('nc-read');if(ro)ro.innerHTML=`más cercano → <b>${cents[b].n}</b>`;
+  });}
+
+function cosInit(){const x=cx('cv-cos');if(!x)return;const W=x._w,H=x._h;
+  const SUB=document.getElementById('cos-sub');
+  const O={x:SX(x,0.12),y:SY(x,0.86)};               // origen abajo-izquierda
+  const L=Math.min(SX(x,1)-O.x,O.y-SY(x,0));
+  const subs=[
+    'Dos reseñas dicen lo mismo, pero una repite más palabras.',
+    '<b>Distancia recta:</b> las ve lejos, porque una flecha es más larga.',
+    '<b>Ángulo (coseno):</b> las ve iguales: misma dirección = mismo sentido.'
+  ];
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    const step=ANIM.step;const e=stepElapsed();
+    if(SUB)SUB.innerHTML=subs[clamp(step,0,2)];
+    // ejes
+    ln(x,{x:O.x,y:O.y},{x:SX(x,1),y:O.y},'rgba(28,26,23,.2)',1);
+    ln(x,{x:O.x,y:O.y},{x:O.x,y:SY(x,0)},'rgba(28,26,23,.2)',1);
+    const grow=easeOutCubic(clamp(t/0.7,0,1));
+    const ang=-Math.PI*0.32;                          // misma dirección para ambos
+    const long={x:O.x+Math.cos(ang)*L*0.95*grow, y:O.y+Math.sin(ang)*L*0.95*grow};
+    const short={x:O.x+Math.cos(ang)*L*0.5*grow,  y:O.y+Math.sin(ang)*L*0.5*grow};
+    arrow(x,O,long,C.accent2);arrow(x,O,short,C.gold);
+    // etiquetas con texto real
+    txt(x,long,'“buena, buena, buena, buena”',C.accent2,13,10,-2,'left','serif');
+    txt(x,short,'“buena, buena”',C.gold,13,10,16,'left','serif');
+
+    if(step>=1){
+      // distancia euclídea: segmento entre las puntas
+      const de=easeOutCubic(clamp(e/0.5,0,1));
+      trace(x,short,long,de,C.accent,2,[5,4]);
+      if(de>=1){const mid={x:(short.x+long.x)/2,y:(short.y+long.y)/2};
+        txt(x,mid,'distancia recta = grande',C.accent,12,8,-6,'left');}
+    }
+    if(step>=2){
+      // ángulo entre ambos = 0 (mismo rayo). Mostramos arco diminuto y veredicto
+      const sweep=easeOutCubic(clamp(e/0.5,0,1));
+      x.save();x.strokeStyle=C.green;x.lineWidth=2.5;x.beginPath();
+      x.arc(O.x,O.y,54,ang-0.001,ang+0.001,false);x.stroke();x.restore();
+      halo(x,O,16,C.green,0.25);
+      txt(x,{x:O.x+70,y:O.y-30},'ángulo ≈ 0°  →  coseno ≈ 1',C.green,14,0,0,'left');
+      txt(x,{x:O.x+70,y:O.y-10},'el coseno las trata como iguales',C.soft,12,0,0,'left');
+    } else {
+      txt(x,{x:W/2,y:SY(x,1)+2},'clic para medir la distancia',C.faint,12,0,0,'center');
+    }
+  });}
+function arrow(x,a,b,c){ln(x,a,b,c,3);const ang=Math.atan2(b.y-a.y,b.x-a.x),s=11;
+  x.save();x.fillStyle=c;x.beginPath();x.moveTo(b.x,b.y);
+  x.lineTo(b.x-Math.cos(ang-.4)*s,b.y-Math.sin(ang-.4)*s);
+  x.lineTo(b.x-Math.cos(ang+.4)*s,b.y-Math.sin(ang+.4)*s);x.closePath();x.fill();x.restore();}
+
+function routeInit(){const x=cx('cv-route');if(!x)return;const W=x._w,H=x._h;
+  const SUB=document.getElementById('route-sub');
+  const inp=SP(x,{x:0.04,y:0.5});
+  const oldc={x:SX(x,0.42),y:SY(x,0.26),w:200,h:60};   // clasificador viejo
+  const gate={x:SX(x,0.42),y:SY(x,0.74),w:200,h:60};   // medidor de cercanía a clases nuevas
+  const out={x:SX(x,0.92),y:SY(x,0.5)};
+  const subs=[
+    'Llega un texto nuevo para clasificar.',
+    'El <b>modelo viejo</b> (5 clases) responde, pero con <b>poca confianza</b>: 0.31.',
+    'El portero mide su cercanía a las clases nuevas: <b>muy cerca de la clase 6</b>.',
+    'Más cerca de una clase nueva que la confianza del viejo → <b>responde “clase 6”</b>.'
+  ];
+  function box(c,col,t1,t2,active){x.save();
+    x.fillStyle=active?'#fbfaf6':'#f6f4ee';x.strokeStyle=col;x.lineWidth=active?2.2:1.5;
+    if(active){halo(x,{x:c.x,y:c.y},c.w*0.6,col,0.10);}
+    roundRect(x,c.x-c.w/2,c.y-c.h/2,c.w,c.h,10);x.fill();x.stroke();
+    x.fillStyle=col;x.font="600 15px 'Inter'";x.textAlign='center';x.fillText(t1,c.x,c.y-4);
+    x.fillStyle=C.faint;x.font="12px 'IBM Plex Mono'";x.fillText(t2,c.x,c.y+16);x.restore();}
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    const step=ANIM.step;const e=stepElapsed();
+    if(SUB)SUB.innerHTML=subs[clamp(step,0,3)];
+
+    // conectores
+    ln(x,inp,{x:oldc.x-oldc.w/2,y:oldc.y},rgba(C.accent2,0.4),1.3,[5,5]);
+    ln(x,inp,{x:gate.x-gate.w/2,y:gate.y},rgba(C.gold,0.4),1.3,[5,5]);
+    ln(x,{x:oldc.x+oldc.w/2,y:oldc.y},out,rgba(C.accent2,0.4),1.3,[5,5]);
+    ln(x,{x:gate.x+gate.w/2,y:gate.y},out,rgba(C.gold,0.4),1.3,[5,5]);
+
+    // entrada
+    dot(x,inp,9,C.accent);
+    txt(x,{x:inp.x,y:inp.y-20},'texto',C.accent,13,0,0,'center');
+    txt(x,{x:inp.x+4,y:inp.y+26},'“…”',C.faint,13,0,0,'center','serif');
+
+    // cajas, activas según el paso
+    box(oldc,C.accent2,'clasificador viejo','5 clases · intacto',step>=1);
+    box(gate,C.gold,'portero (centroides)','¿cerca de μ5 o μ6?',step>=2);
+
+    // veredictos sobre cada caja
+    if(step>=1){const ap=clamp(e/0.5,0,1);x.save();x.globalAlpha=ap;
+      txt(x,{x:oldc.x,y:oldc.y-oldc.h/2-10},'confianza máx = 0.31  (baja)',C.accent2,13,0,0,'center');x.restore();}
+    if(step>=2){const ap=clamp(e/0.5,0,1);x.save();x.globalAlpha=ap;
+      txt(x,{x:gate.x,y:gate.y+gate.h/2+22},'similitud con μ6 = 0.78  (alta)',C.gold,13,0,0,'center');x.restore();}
+
+    // salida
+    dot(x,out,9,step>=3?C.green:C.faint);
+    txt(x,{x:out.x,y:out.y-20},'respuesta',step>=3?C.green:C.faint,13,0,0,'center');
+
+    if(step>=3){const ap=easeOutBack(clamp(e/0.6,0,1));
+      // paquete viaja del portero a la salida
+      const pk=travel({x:gate.x+gate.w/2,y:gate.y},out,easeInOutCubic(clamp(e/0.6,0,1)),20);
+      dot(x,pk,5,C.gold);
+      x.save();x.globalAlpha=clamp(ap,0,1);
+      txt(x,{x:out.x,y:out.y+30},'clase 6',C.green,16,0,0,'center','serif');
+      halo(x,out,22,C.green,0.2);x.restore();
+    } else if(step===0){
+      txt(x,{x:W/2,y:SY(x,1)+2},'clic para ver cómo decide el portero',C.faint,12,0,0,'center');
+    }
+  });}
+
+function thrInit(){ANIM.thr=0.55;const sl=document.getElementById('thr-s');if(sl)sl.value=55;
+  const x=cx('cv-thr');if(!x)return;const W=x._w,H=x._h;const r=seeded(5);
+  const base=[],nw=[];for(let i=0;i<46;i++)base.push(.22+((r()+r()+r())/3)*.38);
+  for(let i=0;i<22;i++)nw.push(.5+((r()+r()+r())/3)*.45);
+  function f1(tau){let tp=0,fp=0,fn=0,tn=0;nw.forEach(v=>v>=tau?tp++:fn++);base.forEach(v=>v>=tau?fp++:tn++);
+    const P=tp/(tp+fp||1),R=tp/(tp+fn||1),f1n=2*P*R/((P+R)||1);
+    const Pn=tn/(tn+fn||1),Rn=tn/(tn+fp||1),f1b=2*Pn*Rn/((Pn+Rn)||1);return (f1n+f1b)/2;}
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    const x0=SX(x,0),y0=SY(x,0),x1=SX(x,1),y1=SY(x,1),pw=x1-x0,ph=y1-y0;
+    const tau=ANIM.thr;const tx=x0+tau*pw;
+    x.fillStyle='rgba(31,86,115,.06)';x.fillRect(x0,y0,tx-x0,ph);
+    x.fillStyle='rgba(169,121,28,.07)';x.fillRect(tx,y0,x1-tx,ph);
+    ln(x,{x:x0,y:y1},{x:x1,y:y1},'rgba(28,26,23,.25)',1);
+    base.forEach((v,i)=>{const ap=easeOutCubic(stagger(t,i,0.008,0.4));if(ap<=0)return;
+      const px=x0+v*pw,py=y0+ph*.62+((i%6)-3)*8;
+      const mis=v>=tau;if(mis)halo(x,{x:px,y:py},9,C.accent,0.3);
+      dot(x,{x:px,y:py},3.6*ap,mis?C.accent:C.accent2,.85*clamp(ap*1.3,0,1));});
+    nw.forEach((v,i)=>{const ap=easeOutCubic(stagger(t,i+46,0.008,0.4));if(ap<=0)return;
+      const px=x0+v*pw,py=y0+ph*.3+((i%5)-2)*8;
+      const ok=v>=tau;if(!ok)halo(x,{x:px,y:py},9,C.accent,0.3);
+      dot(x,{x:px,y:py},4.2*ap,ok?C.gold:C.accent,.9*clamp(ap*1.3,0,1));});
+    halo(x,{x:tx,y:(y0+y1)/2},10,C.accent,0.12);
+    ln(x,{x:tx,y:y0-4},{x:tx,y:y1},C.accent,2);txt(x,{x:tx,y:y0-10},'τ',C.accent,15,0,0,'center','serif');
+    txt(x,{x:x0+6,y:y0+14},'base-clf',C.accent2,11);txt(x,{x:x1-6,y:y0+14},'clases nuevas',C.gold,11,0,0,'right');
+    const f=document.getElementById('thr-f1');if(f)f.textContent=f1(tau).toFixed(3);
+  });}
+
+function f1Init(){const x=cx('cv-f1');if(!x)return;const W=x._w,H=x._h;
+  loop(idx,(t)=>{x.clearRect(0,0,W,H);
+    const y0=SY(x,0),y1=SY(x,1);const baseY=y1-40,maxH=(y1-y0)-70,bw=84;
+    function bar(cxp,h,col,lbl,val,suf,delay){const g=easeOutBack(clamp((t-delay)/0.9,0,1));
+      const bh=h*maxH*clamp(g,0,1);
+      x.save();x.fillStyle=col;roundRectFill(x,cxp-bw/2,baseY-bh,bw,bh,6);x.restore();
+      const shown=Math.round(val*100*clamp(g,0,1));
+      x.fillStyle=C.ink;x.font="600 22px 'Newsreader'";x.textAlign='center';
+      x.fillText(shown+suf,cxp,baseY-bh-12);
+      x.fillStyle=C.soft;x.font="13px 'IBM Plex Mono'";x.fillText(lbl,cxp,baseY+24);}
+    bar(W*.40,.95,C.accent2,'Accuracy',.95,'%',0);
+    bar(W*.60,.49,C.accent,'F1 macro',.49,'',0.25);
+    txt(x,{x:W/2,y:y0+8},'Modelo que ignora la clase minoritaria',C.soft,13,0,0,'center');
+  });}
+function roundRectFill(x,X,Y,w,h,r){if(h<1)h=1;r=Math.min(r,h/2);x.beginPath();x.moveTo(X+r,Y);
+  x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath();x.fill();}
+
+show(0);
+window.addEventListener('resize',()=>show(idx));
+
+</script>
+</body>
+</html>
